@@ -2,32 +2,27 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
-from dotenv import load_dotenv
 import re
+from dotenv import load_dotenv
 
-# Load .env variables
+# Load environment variables from .env
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
+# LLM wrapper class
 class LLMInterface:
     def __init__(self, api_url: str, api_key: str):
         self.api_url = api_url
         self.headers = {"Authorization": f"Bearer {api_key}"}
         self.system_message = """
- You are an AI that generates a high-quality frontend code in React.js with MUI.
- Follow these strict rules:
-- Styling and Design:
-    - Use these design constants:
-        - Primary color: #1B374C
-        - Accent color: #F39325
-        - Background: #F5F5F6
-        - Font family: 'Fira Sans' (use sx where needed)
+You are a professional coding assistant. The user will send you a code snippet followed by a request.
 
-- Strict Rules:
-    - return only comple code without extra text or characters 
-    - do not start with ```jsx, start directly with the code 
+Your job:
+- Carefully apply ONLY the requested change.
+- Return the FULL, updated code — no explanations, no extra text, no markdown formatting.
+- Start directly with the first line of code (no ``` or language tags).
 """
         self.model = "Qwen/Qwen2.5-Coder-7B-Instruct-fast"
 
@@ -37,7 +32,7 @@ class LLMInterface:
                 {"role": "system", "content": self.system_message},
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 1000,
+            "max_tokens": 2000,
             "model": self.model
         }
         response = requests.post(self.api_url, headers=self.headers, json=payload)
@@ -46,16 +41,18 @@ class LLMInterface:
         else:
             return f"Error: {response.status_code}, {response.text}"
 
+# Root route
 @app.route('/')
 def home():
-    return "Welcome to the SECOND AI Code Generator API (PORT 5001)!"
+    return "Welcome to the AI Code Modifier API!"
 
+# Main route for generating code
 @app.route('/generate', methods=['POST'])
 def generate_code():
     data = request.get_json()
-    prompt = data.get("prompt")
+    full_prompt = data.get("prompt")
 
-    if not prompt:
+    if not full_prompt:
         return jsonify({"error": "No prompt provided"}), 400
 
     api_url = "https://router.huggingface.co/nebius/v1/chat/completions"
@@ -65,10 +62,10 @@ def generate_code():
         return jsonify({"error": "API key is missing. Set it in the .env file."}), 500
 
     llm = LLMInterface(api_url, api_key)
-    response = llm.query(prompt)
+    raw_response = llm.query(full_prompt)
 
-    # Clean markdown code block formatting
-    cleaned_code = re.sub(r'^```[a-z]*\n([\s\S]*?)\n```$', r'\1', response.strip(), flags=re.MULTILINE)
+    # Clean markdown formatting like ```js or ```jsx
+    cleaned_code = re.sub(r'^```[a-z]*\n([\s\S]*?)\n```$', r'\1', raw_response.strip(), flags=re.MULTILINE)
 
     return jsonify({"code": cleaned_code})
 
