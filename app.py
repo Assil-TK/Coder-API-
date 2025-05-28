@@ -53,7 +53,7 @@ def generate_code():
     if not full_prompt:
         return jsonify({"error": "No prompt provided"}), 400
 
-    api_url = "https://router.huggingface.co/nebius/v1/chat/completions"
+    api_url = "https://router.huggingface.co/nscale/v1/chat/completions"
 
     api_key = os.getenv("HF_API_KEY")
 
