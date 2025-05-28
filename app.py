@@ -5,13 +5,10 @@ import os
 import re
 from dotenv import load_dotenv
 
-# Load environment variables from .env
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-
-# LLM wrapper class
 class LLMInterface:
     def __init__(self, api_url: str, api_key: str):
         self.api_url = api_url
@@ -24,7 +21,8 @@ Your job:
 - Return the FULL, updated code — no explanations, no extra text, no markdown formatting.
 - Start directly with the first line of code (no ``` or language tags).
 """
-        self.model = "Qwen/Qwen2.5-Coder-7B-Instruct-fast"
+        self.model = "Qwen/Qwen1.5-Coder-7B-Instruct"
+
 
     def query(self, prompt: str) -> str:
         payload = {
@@ -64,7 +62,7 @@ def generate_code():
     llm = LLMInterface(api_url, api_key)
     raw_response = llm.query(full_prompt)
 
-    # Clean markdown formatting like ```js or ```jsx
+    # Clean markdown formatting bch tna77i ay characters zeydin 9bal lcode 
     cleaned_code = re.sub(r'^```[a-z]*\n([\s\S]*?)\n```$', r'\1', raw_response.strip(), flags=re.MULTILINE)
 
     return jsonify({"code": cleaned_code})
