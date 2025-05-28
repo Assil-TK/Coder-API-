@@ -21,7 +21,7 @@ Your job:
 - Return the FULL, updated code — no explanations, no extra text, no markdown formatting.
 - Start directly with the first line of code (no ``` or language tags).
 """
-        self.model = "Qwen/Qwen1.5-Coder-7B-Instruct"
+        self.model = "Qwen/Qwen2.5-Coder-7B-Instruct"
 
 
     def query(self, prompt: str) -> str:
